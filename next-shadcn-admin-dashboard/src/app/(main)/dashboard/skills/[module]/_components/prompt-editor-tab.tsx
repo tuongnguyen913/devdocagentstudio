@@ -59,7 +59,7 @@ export function PromptEditorTab({ config, moduleId }: Props) {
           <div>
             <CardTitle className="text-base">System Prompt</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Prompt được gửi đến Claude AI mỗi khi skill này được gọi. Thay đổi có hiệu lực ngay lập tức.
+              Prompt được gửi đến Gemini AI mỗi khi skill này được gọi. Thay đổi có hiệu lực ngay lập tức.
             </p>
           </div>
           <div className="flex items-center gap-2">

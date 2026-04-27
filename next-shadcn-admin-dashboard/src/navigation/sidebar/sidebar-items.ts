@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Presentation,
-  Settings,
   Zap,
 } from "lucide-react";
 
@@ -40,7 +39,7 @@ export interface NavGroup {
 export const sidebarItems: NavGroup[] = [
   {
     id: 1,
-    label: "Overview",
+    label: "Tổng quan",
     items: [
       {
         title: "Dashboard",
@@ -54,22 +53,22 @@ export const sidebarItems: NavGroup[] = [
     label: "Skill Modules",
     items: [
       {
-        title: "DOCX",
+        title: "DOCX — Công văn",
         url: "/dashboard/skills/docx",
         icon: FileText,
       },
       {
-        title: "PPTX",
+        title: "PPTX — Thuyết trình",
         url: "/dashboard/skills/pptx",
         icon: Presentation,
       },
       {
-        title: "Excel",
+        title: "Excel — Bảng tính",
         url: "/dashboard/skills/excel",
         icon: FileSpreadsheet,
       },
       {
-        title: "UML Diagrams",
+        title: "UML — Sơ đồ",
         url: "/dashboard/skills/uml",
         icon: GitBranch,
       },
@@ -88,24 +87,6 @@ export const sidebarItems: NavGroup[] = [
         url: "/dashboard/skills/feature",
         icon: Zap,
         isNew: true,
-      },
-    ],
-  },
-  {
-    id: 3,
-    label: "Settings",
-    items: [
-      {
-        title: "API Keys",
-        url: "/dashboard/settings/api-keys",
-        icon: Key,
-        comingSoon: true,
-      },
-      {
-        title: "System",
-        url: "/dashboard/settings/system",
-        icon: Settings,
-        comingSoon: true,
       },
     ],
   },

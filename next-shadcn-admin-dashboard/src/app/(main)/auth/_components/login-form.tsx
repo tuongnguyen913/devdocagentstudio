@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
+import { useRouter, useSearchParams } from "next/navigation";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -11,12 +15,16 @@ import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/compo
 import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  email: z.string().email({ message: "Vui lòng nhập địa chỉ email hợp lệ." }),
+  password: z.string().min(6, { message: "Mật khẩu phải có ít nhất 6 ký tự." }),
   remember: z.boolean().optional(),
 });
 
 export function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -26,14 +34,30 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    toast("You submitted the following values", {
-      description: (
-        <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        toast.error(json.error || "Đăng nhập thất bại");
+        return;
+      }
+
+      toast.success(`Chào mừng, ${json.user.name}!`);
+      const redirect = searchParams.get("redirect") || "/dashboard/default";
+      router.push(redirect);
+    } catch {
+      toast.error("Đã xảy ra lỗi kết nối");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -44,14 +68,15 @@ export function LoginForm() {
           name="email"
           render={({ field, fieldState }) => (
             <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-email">Email Address</FieldLabel>
+              <FieldLabel htmlFor="login-email">Địa chỉ Email</FieldLabel>
               <Input
                 {...field}
                 id="login-email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="ban@example.com"
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
+                disabled={isLoading}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -62,7 +87,7 @@ export function LoginForm() {
           name="password"
           render={({ field, fieldState }) => (
             <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="login-password">Password</FieldLabel>
+              <FieldLabel htmlFor="login-password">Mật khẩu</FieldLabel>
               <Input
                 {...field}
                 id="login-password"
@@ -70,6 +95,7 @@ export function LoginForm() {
                 placeholder="••••••••"
                 autoComplete="current-password"
                 aria-invalid={fieldState.invalid}
+                disabled={isLoading}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
@@ -89,7 +115,7 @@ export function LoginForm() {
               />
               <FieldContent>
                 <FieldLabel htmlFor="login-remember" className="font-normal">
-                  Remember me for 30 days
+                  Ghi nhớ đăng nhập 8 giờ
                 </FieldLabel>
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
               </FieldContent>
@@ -97,8 +123,8 @@ export function LoginForm() {
           )}
         />
       </FieldGroup>
-      <Button className="w-full" type="submit">
-        Login
+      <Button className="w-full" type="submit" disabled={isLoading}>
+        {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
     </form>
   );

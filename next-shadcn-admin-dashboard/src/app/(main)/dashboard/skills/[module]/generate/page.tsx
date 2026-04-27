@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
-import { SKILL_MODULE_IDS, type SkillModuleId } from "@/data/skills";
+
+import type { SkillModuleId } from "@/data/skills";
+import { SKILL_MODULE_IDS } from "@/data/skills";
 import { getSkillData } from "@/data/skills/all-skills";
+import { formSchemas } from "@/data/skills/form-schemas";
 import { GenerateClient } from "./_components/generate-client";
 
 interface PageProps {
@@ -17,11 +20,14 @@ export default async function GeneratePage({ params }: PageProps) {
   const data = getSkillData(moduleId);
   if (!data) notFound();
 
+  const schema = formSchemas[moduleId] ?? [];
+
   return (
     <GenerateClient
       moduleId={moduleId as SkillModuleId}
       moduleName={data.config.name}
       moduleColor={data.config.color}
+      formSchema={schema}
     />
   );
 }

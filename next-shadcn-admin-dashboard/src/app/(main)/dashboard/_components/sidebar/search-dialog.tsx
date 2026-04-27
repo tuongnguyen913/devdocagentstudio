@@ -1,7 +1,19 @@
 "use client";
 import * as React from "react";
 
-import { ChartBar, Forklift, Gauge, GraduationCap, LayoutDashboard, Search, ShoppingBag } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import {
+  ArrowRightLeft,
+  Bug,
+  FileSpreadsheet,
+  FileText,
+  GitBranch,
+  LayoutDashboard,
+  Presentation,
+  Search,
+  Zap,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,25 +24,24 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 
-const searchItems = [
-  { group: "Dashboards", icon: LayoutDashboard, label: "Default" },
-  { group: "Dashboards", icon: ChartBar, label: "CRM" },
-  { group: "Dashboards", icon: Gauge, label: "Analytics" },
-  { group: "Dashboards", icon: ShoppingBag, label: "E-Commerce", disabled: true },
-  { group: "Dashboards", icon: GraduationCap, label: "Academy", disabled: true },
-  { group: "Dashboards", icon: Forklift, label: "Logistics", disabled: true },
-  { group: "Authentication", label: "Login v1" },
-  { group: "Authentication", label: "Login v2" },
-  { group: "Authentication", label: "Register v1" },
-  { group: "Authentication", label: "Register v2" },
+const skillItems = [
+  { label: "Dashboard", icon: LayoutDashboard, url: "/dashboard/default", group: "Tổng quan" },
+  { label: "DOCX — Công văn hành chính", icon: FileText, url: "/dashboard/skills/docx", group: "Skill Modules" },
+  { label: "PPTX — Slide thuyết trình", icon: Presentation, url: "/dashboard/skills/pptx", group: "Skill Modules" },
+  { label: "Excel — Bảng tính & Báo giá", icon: FileSpreadsheet, url: "/dashboard/skills/excel", group: "Skill Modules" },
+  { label: "UML — Sơ đồ kỹ thuật", icon: GitBranch, url: "/dashboard/skills/uml", group: "Skill Modules" },
+  { label: "Bug & Release Notes", icon: Bug, url: "/dashboard/skills/bug-release", group: "Skill Modules" },
+  { label: "Transfer KN — Bàn giao kỹ thuật", icon: ArrowRightLeft, url: "/dashboard/skills/transfer", group: "Skill Modules" },
+  { label: "Feature Track — Theo dõi tính năng", icon: Zap, url: "/dashboard/skills/feature", group: "Skill Modules" },
 ];
 
 export function SearchDialog() {
   const [open, setOpen] = React.useState(false);
-  const groups = [...new Set(searchItems.map((item) => item.group))];
+  const router = useRouter();
+
+  const groups = [...new Set(skillItems.map((item) => item.group))];
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -43,6 +54,11 @@ export function SearchDialog() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  const handleSelect = (url: string) => {
+    setOpen(false);
+    router.push(url);
+  };
+
   return (
     <>
       <Button
@@ -51,38 +67,30 @@ export function SearchDialog() {
         className="px-0! font-normal text-muted-foreground hover:no-underline"
       >
         <Search data-icon="inline-start" />
-        Search
+        Tìm kiếm
         <kbd className="inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium text-[10px]">
           <span className="text-xs">⌘</span>J
         </kbd>
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          <CommandInput placeholder="Search dashboards, users, and more…" />
+          <CommandInput placeholder="Tìm kiếm module, tính năng..." />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-            {groups.map((group, index) => (
-              <React.Fragment key={group}>
-                {index > 0 && <CommandSeparator />}
-                <CommandGroup heading={group}>
-                  {searchItems
-                    .filter((item) => item.group === group)
-                    .map((item) => (
-                      <CommandItem
-                        disabled={item.disabled}
-                        key={item.label}
-                        onSelect={() => {
-                          if (!item.disabled) {
-                            setOpen(false);
-                          }
-                        }}
-                      >
-                        {item.icon && <item.icon />}
-                        <span>{item.label}</span>
-                      </CommandItem>
-                    ))}
-                </CommandGroup>
-              </React.Fragment>
+            <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
+            {groups.map((group) => (
+              <CommandGroup key={group} heading={group}>
+                {skillItems
+                  .filter((item) => item.group === group)
+                  .map((item) => (
+                    <CommandItem
+                      key={item.label}
+                      onSelect={() => handleSelect(item.url)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      <span>{item.label}</span>
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
             ))}
           </CommandList>
         </Command>

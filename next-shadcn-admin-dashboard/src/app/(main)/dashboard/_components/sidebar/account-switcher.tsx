@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { BadgeCheck, Bell, CreditCard, LogOut } from "lucide-react";
+
+import { BadgeCheck, Bell, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -27,6 +29,12 @@ export function AccountSwitcher({
   }>;
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/auth/v1/login");
+  };
 
   return (
     <DropdownMenu>
@@ -59,21 +67,17 @@ export function AccountSwitcher({
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <BadgeCheck />
-            Account
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard />
-            Billing
+            Tài khoản
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Bell />
-            Notifications
+            Thông báo
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
           <LogOut />
-          Log out
+          Đăng xuất
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

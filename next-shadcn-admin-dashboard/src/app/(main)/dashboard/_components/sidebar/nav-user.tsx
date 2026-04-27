@@ -1,6 +1,8 @@
 "use client";
 
-import { CircleUser, CreditCard, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+import { BadgeCheck, Bell, CircleUser, EllipsisVertical, LogOut, MessageSquareDot } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,6 +27,12 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/auth/v1/login");
+  };
 
   return (
     <SidebarMenu>
@@ -68,21 +76,17 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <CircleUser />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
+                Tài khoản
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <MessageSquareDot />
-                Notifications
+                Thông báo
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
               <LogOut />
-              Log out
+              Đăng xuất
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
