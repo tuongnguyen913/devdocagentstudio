@@ -21,7 +21,7 @@
   <img alt="Next.js" src="https://img.shields.io/badge/Next.js-14-black?logo=nextdotjs&style=flat-square" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&style=flat-square" />
   <img alt="Vercel" src="https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&style=flat-square" />
-  <img alt="Claude API" src="https://img.shields.io/badge/AI-Claude%20API-orange?style=flat-square" />
+  <img alt="OpenAI API" src="https://img.shields.io/badge/AI-OpenAI-green?style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green?style=flat-square" />
 </p>
 
@@ -43,7 +43,7 @@ Một developer thường xuyên phải xử lý:
 
 Mỗi loại có quy chuẩn riêng, format riêng, và mất nhiều giờ để làm đúng — trong khi đây đều là **công việc lặp đi lặp lại**.
 
-**DevDocs Studio** giải quyết bài toán đó bằng cách cung cấp bộ công cụ tạo tài liệu tự động, được điều phối bởi AI (Claude API), chạy hoàn toàn trên **Vercel Free/Pro**, không cần server riêng.
+**DevDocs Studio** giải quyết bài toán đó bằng cách cung cấp bộ công cụ tạo tài liệu tự động, được điều phối bởi AI (OpenAI API), chạy hoàn toàn trên **Vercel Free/Pro**, không cần server riêng.
 
 ***
 
@@ -68,7 +68,7 @@ Mỗi skill có **system prompt và template riêng**, quản lý qua `/admin/sk
 - ✏️ Xem và sửa system prompt của từng module
 - 📁 Upload template mới (`.docx` / `.pptx` / `.xlsx`)
 - 🕐 Version history — lưu tối đa 10 bản thay đổi
-- 🔐 Bảo vệ bằng NextAuth.js (Google OAuth hoặc password)
+- 🔐 Bảo vệ bằng JWT Authentication (bảo mật cao)
 - 🚀 Thay prompt không cần deploy lại code
 
 ***
@@ -91,19 +91,19 @@ Trang chủ · Skill Dashboard · Skill Editor · Preview · Export
         ▼
 ┌─────────────────────────────────────────────────────┐
 │         Vercel Serverless Functions                 │
-│  Claude API · docx-js · SheetJS · pptxgenjs · Kroki │
+│  OpenAI API · docx-js · SheetJS · pptxgenjs · Kroki │
 └──────────────┬──────────────────────┬───────────────┘
                │                      │
                ▼                      ▼
-    Skill Config Store         File Output Store
-    Vercel KV (Redis)          Vercel Blob
-    prompt + template          .docx / .pptx
+    Database (Neon Postgres)   File Output Store
+    Drizzle ORM                Vercel Blob
+    Users + Skill Configs      .docx / .pptx
     + style per module         .xlsx / .pdf
                │
                ▼
     Skill Admin Panel — /admin/skills
-    Verxem · Sửa prompt · Cập nhật template · Version history
-    Bảo vệ bằng NextAuth.js
+    Xem · Sửa prompt · Cập nhật template · Version history
+    Bảo vệ bằng JWT Auth
 ```
 
 ### Luồng xử lý một request
@@ -113,10 +113,10 @@ Trang chủ · Skill Dashboard · Skill Editor · Preview · Export
         ↓
 2. POST /api/skills/[module]
         ↓
-3. Đọc system prompt từ Vercel KV: skill:{module}:prompt
-4. Đọc template URL từ Vercel KV: skill:{module}:template_url
+3. Đọc system prompt từ Neon DB (Postgres)
+4. Đọc template URL từ Database
         ↓
-5. Gọi Claude API (streaming) → sinh structured JSON
+5. Gọi OpenAI API (streaming) → sinh structured JSON
         ↓
 6. Thư viện chuyên dụng render JSON → file Buffer
    (docx-js / pptxgenjs / SheetJS / Kroki)
@@ -136,10 +136,10 @@ Trang chủ · Skill Dashboard · Skill Editor · Preview · Export
 |-------|-----------|---------|
 | **Frontend** | Next.js 14 · React · TypeScript · Tailwind CSS · shadcn/ui | App Router |
 | **Backend** | Vercel Serverless Functions | `/api/skills/[module]` |
-| **AI** | Anthropic Claude API (`claude-sonnet`) | Streaming responses |
-| **Config Store** | Vercel KV (Redis) | Prompt + template config |
+| **AI** | OpenAI API (`gpt-4o-mini`, `gpt-4o`) | Streaming responses, luân chuyển model |
+| **Database** | Neon Postgres (Drizzle ORM) | Users, Prompt + template config |
 | **File Store** | Vercel Blob | Output files tạm thời |
-| **Auth** | NextAuth.js | Google OAuth hoặc credentials |
+| **Auth** | JWT Auth | Custom JWT middleware bảo mật |
 | **DOCX** | docx-js (npm `docx`) | Chuẩn Nghị định 30 |
 | **PPTX** | pptxgenjs | Slide demo phần mềm |
 | **Excel** | SheetJS (xlsx) | Báo giá, tracking |
@@ -156,8 +156,8 @@ Trang chủ · Skill Dashboard · Skill Editor · Preview · Export
 
 - Node.js >= 18
 - Tài khoản Vercel (Free là đủ)
-- Anthropic API key
-- (Tuỳ chọn) Google OAuth credentials cho admin login
+- OpenAI API key
+- Neon Database (Postgres) connection string
 
 ### Cài đặt local
 
@@ -176,24 +176,18 @@ cp .env.example .env.local
 ### Cấu hình `.env.local`
 
 ```env
-# Anthropic Claude API
-ANTHROPIC_API_KEY=sk-ant-...
+# OpenAI API
+OPENAI_API_KEY=sk-proj-...
 
-# Vercel KV — lấy từ Vercel Dashboard
-KV_URL=redis://...
-KV_REST_API_URL=https://...
-KV_REST_API_TOKEN=...
+# Vercel Postgres / Neon DB
+DATABASE_URL=postgresql://...
+POSTGRES_URL=postgresql://...
 
 # Vercel Blob
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
 
-# NextAuth
-NEXTAUTH_SECRET=your-secret-here
-NEXTAUTH_URL=http://localhost:3000
-
-# Google OAuth (tuỳ chọn)
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
+# JWT Auth
+JWT_SECRET=your-secure-secret-here
 ```
 
 ### Chạy development
@@ -213,7 +207,7 @@ npm i -g vercel
 vercel --prod
 ```
 
-Sau khi deploy, vào **Vercel Dashboard → Storage** để tạo KV và Blob stores, sau đó link vào project.
+Sau khi deploy, vào **Vercel Dashboard → Settings → Environment Variables** để thêm các biến môi trường cho Database và OpenAI.
 
 ***
 
@@ -244,9 +238,9 @@ devdocs-studio/
 │   │   ├── bug-release.ts
 │   │   ├── transfer-kn.ts
 │   │   └── feature-track.ts
-│   ├── kv.ts                     # Vercel KV helpers
+│   ├── db/                       # Drizzle ORM config & schema
 │   ├── blob.ts                   # Vercel Blob helpers
-│   └── claude.ts                 # Claude API client
+│   └── openai-client.ts          # OpenAI API client
 ├── skills/                       # Skill config files (.md)
 │   ├── SKILL-1.Tai-Lieu-Word.md
 │   ├── SKILL-2.PPTX.md
@@ -318,18 +312,19 @@ File `.xlsx` 3 sheet:
 - [x] Phân tích kiến trúc tổng thể
 - [x] Thiết kế SKILL-1 (DOCX) chuẩn Nghị định 30
 - [x] Thiết kế SKILL-2 (PPTX) cho demo phần mềm
-- [ ] Xây dựng Next.js 14 project skeleton
-- [ ] Admin Panel + NextAuth
-- [ ] Vercel KV / Blob integration
-- [ ] Implement SKILL-1 (DOCX)
-- [ ] Implement SKILL-3 (Excel)
-- [ ] Implement SKILL-5 (Bug & Release)
-- [ ] Implement SKILL-2 (PPTX)
-- [ ] Implement SKILL-7 (Feature Track)
+- [x] Xây dựng Next.js 14 project skeleton
+- [x] Admin Panel + JWT Authentication
+- [x] Neon Postgres (Drizzle) / Blob integration
+- [x] Chuyển đổi toàn diện sang OpenAI (Dynamic Model Routing)
+- [x] Implement SKILL-1 (DOCX)
+- [x] Implement SKILL-3 (Excel)
+- [x] Implement SKILL-5 (Bug & Release)
+- [x] Implement SKILL-2 (PPTX)
+- [x] Implement SKILL-7 (Feature Track)
+- [x] Implement SKILL-6 (Transfer KN)
 - [ ] Implement SKILL-4 (UML via Kroki)
-- [ ] Implement SKILL-6 (Transfer KN)
-- [ ] UI/UX hoàn chỉnh
-- [ ] Testing & Deploy production
+- [x] UI/UX hoàn chỉnh
+- [x] Testing & Deploy production (Vercel)
 
 ***
 
