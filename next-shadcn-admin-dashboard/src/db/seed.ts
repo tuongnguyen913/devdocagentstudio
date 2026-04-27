@@ -1,9 +1,20 @@
 import { config } from "dotenv";
 import { getDb, schema } from "./index";
-import { STATIC_USERS } from "../lib/auth/users";
 import { getAllSkillConfigs } from "../data/skills/all-skills";
+import * as bcrypt from "bcryptjs";
 
 config({ path: ".env.local" });
+
+const DUMMY_ADMIN_PASSWORD = bcrypt.hashSync("admin123", 10);
+const STATIC_USERS = [
+  {
+    email: "admin@devdocs.studio",
+    name: "Admin User",
+    role: "admin",
+    passwordHash: DUMMY_ADMIN_PASSWORD,
+    avatar: "https://github.com/shadcn.png",
+  }
+];
 
 async function seed() {
   const db = getDb();
